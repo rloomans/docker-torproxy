@@ -1,9 +1,11 @@
 FROM alpine
-MAINTAINER David Personette <dperson@gmail.com>
+MAINTAINER Robert Loomans <robert@loomans.org>
 
 # Install tor and privoxy
 RUN apk --no-cache --no-progress upgrade && \
-    apk --no-cache --no-progress add bash curl privoxy shadow tini tor tzdata&&\
+    apk --no-cache --no-progress add bash curl privoxy shadow tini tor tzdata && \
+    addgroup --system tor && \
+    usermod -g tor -G tor tor && \
     file='/etc/privoxy/config' && \
     sed -i 's|^\(accept-intercepted-requests\) .*|\1 1|' $file && \
     sed -i '/^listen/s|127\.0\.0\.1||' $file && \
@@ -11,7 +13,7 @@ RUN apk --no-cache --no-progress upgrade && \
     sed -i 's|^\(logfile\)|#\1|' $file && \
     sed -i 's|^#\(log-messages\)|\1|' $file && \
     sed -i 's|^#\(log-highlight-messages\)|\1|' $file && \
-    sed -i '/forward *localhost\//a forward-socks5t / 127.0.0.1:9050 .' $file&&\
+    sed -i '/forward *localhost\//a forward-socks5t / 127.0.0.1:9050 .' $file && \
     sed -i '/^forward-socks5t \//a forward 172.16.*.*/ .' $file && \
     sed -i '/^forward 172\.16\.\*\.\*\//a forward 172.17.*.*/ .' $file && \
     sed -i '/^forward 172\.17\.\*\.\*\//a forward 172.18.*.*/ .' $file && \
