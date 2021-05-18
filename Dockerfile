@@ -5,8 +5,11 @@ MAINTAINER Robert Loomans <robert@loomans.org>
 RUN apk --no-cache --no-progress upgrade && \
     apk --no-cache --no-progress add bash curl privoxy shadow tini tor tzdata && \
     addgroup --system tor && \
-    usermod -g tor -G tor tor && \
-    file='/etc/privoxy/config' && \
+    usermod -g tor -G tor tor
+
+RUN cd /etc/privoxy && for i in *.new; do mv "$i" "`basename "$i" .new`"; done
+
+RUN file='/etc/privoxy/config' && \
     sed -i 's|^\(accept-intercepted-requests\) .*|\1 1|' $file && \
     sed -i '/^listen/s|127\.0\.0\.1||' $file && \
     sed -i '/^listen.*::1/s|^|#|' $file && \
