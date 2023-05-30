@@ -1,10 +1,9 @@
-FROM alpine
+FROM alpine:3.18
 MAINTAINER Robert Loomans <robert@loomans.org>
 
 # Install tor and privoxy
-RUN echo 1 && \
-    apk --no-cache --no-progress upgrade && \
-    apk --no-cache --no-progress add bash curl privoxy shadow tini tor tzdata && \
+RUN apk --no-cache --no-progress upgrade && \
+    apk --no-cache --no-progress add bash curl privoxy privoxy-doc shadow tini tor tzdata && \
     addgroup --system tor && \
     usermod -g tor -G tor tor
 
