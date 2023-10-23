@@ -3,7 +3,7 @@ MAINTAINER Robert Loomans <robert@loomans.org>
 
 # Install tor and privoxy
 RUN apk --no-cache --no-progress upgrade && \
-    apk --no-cache --no-progress add bash curl privoxy privoxy-doc shadow tini tor tzdata && \
+    apk --no-cache --no-progress add bash curl privoxy privoxy-doc shadow tini tor tzdata jq && \
     addgroup --system tor && \
     usermod -g tor -G tor tor
 
@@ -59,6 +59,7 @@ RUN file='/etc/privoxy/config' && \
     rm -rf /tmp/*
 
 COPY torproxy.sh /usr/bin/
+COPY ishealthy.sh /
 
 EXPOSE 8118 9050 9051
 

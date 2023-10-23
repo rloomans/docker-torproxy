@@ -79,6 +79,19 @@ password() { local passwd="$1" file=/etc/tor/torrc
                 "tor --hash-password '$passwd' |tail -n 1")" >>$file 2>/dev/null
 }
 
+check() {
+  set -e
+
+  curl -sS --socks5-hostname 127.0.0.1:9050 https://check.torproject.org/api/ip | jq .IsTor | fgrep -q -x true || exit 10
+
+  env HTTP_PROXY=http://127.0.0.1:8118/ HTTPS_PROXY=http://127.0.0.1:8118/ \
+    curl -sS https://check.torproject.org/api/ip | jq .IsTor | fgrep -q -x true || exit 10
+
+  echo OK
+
+  exit 0
+}
+
 ### usage: Help
 # Arguments:
 #   none)
@@ -89,6 +102,7 @@ Options (fields in '[]' are optional, '<>' are required):
     -h          This help
     -b \"\"       Configure tor relaying bandwidth in KB/s
                 possible arg: \"[number]\" - # of KB/s to allow
+    -c          Check health of tor and proxy
     -e          Allow this to be an exit node for tor traffic
     -l \"<country>\" Configure tor to only use exit nodes in specified country
                 required args: \"<country>\" (IE, "US" or "DE")
@@ -105,10 +119,11 @@ The 'command' (if provided and valid) will be run instead of torproxy
     exit $RC
 }
 
-while getopts ":hb:el:np:s:" opt; do
+while getopts ":hb:cel:np:s:" opt; do
     case "$opt" in
         h) usage ;;
         b) bandwidth "$OPTARG" ;;
+        c) check ;;
         e) exitnode ;;
         l) exitnode_country "$OPTARG" ;;
         n) newnym ;;
