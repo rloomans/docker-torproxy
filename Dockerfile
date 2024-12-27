@@ -1,5 +1,5 @@
-FROM alpine:3.18
-MAINTAINER Robert Loomans <robert@loomans.org>
+FROM alpine:3
+LABEL maintainer="Robert Loomans <robert@loomans.org>"
 
 # Install tor and privoxy
 RUN apk --no-cache --no-progress upgrade && \
@@ -54,7 +54,7 @@ RUN file='/etc/privoxy/config' && \
     echo 'User tor' >>/etc/tor/torrc && \
     echo 'VirtualAddrNetworkIPv4 10.192.0.0/10' >>/etc/tor/torrc && \
     mkdir -p /etc/tor/run && \
-    chown -Rh tor. /var/lib/tor /etc/tor/run && \
+    chown -Rh tor:tor /var/lib/tor /etc/tor/run && \
     chmod 0750 /etc/tor/run && \
     rm -rf /tmp/*
 
