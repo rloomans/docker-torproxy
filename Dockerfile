@@ -3,9 +3,7 @@ LABEL maintainer="Robert Loomans <robert@loomans.org>"
 
 # Install tor and privoxy
 RUN apk --no-cache --no-progress upgrade && \
-    apk --no-cache --no-progress add bash curl privoxy privoxy-doc shadow tini tor tzdata jq && \
-    addgroup --system tor && \
-    usermod -g tor -G tor tor
+    apk --no-cache --no-progress add bash curl privoxy privoxy-doc shadow tini tor tzdata jq
 
 RUN cd /etc/privoxy && for i in *.new; do mv "$i" "`basename "$i" .new`"; done
 
@@ -59,13 +57,11 @@ RUN file='/etc/privoxy/config' && \
     rm -rf /tmp/*
 
 COPY torproxy.sh /usr/bin/
-COPY ishealthy.sh /
 
 EXPOSE 8118 9050 9051
 
 HEALTHCHECK --interval=60s --timeout=15s --start-period=20s \
-            CMD curl -sx localhost:8118 'https://check.torproject.org/' | \
-            grep -qm1 Congratulations
+            CMD /usr/bin/torproxy.sh -c
 
 VOLUME ["/etc/tor", "/var/lib/tor"]
 
