@@ -1,4 +1,4 @@
-FROM alpine:3.20
+FROM alpine:3.23.2
 LABEL maintainer="Robert Loomans <robert@loomans.org>"
 
 # Install tor and privoxy
