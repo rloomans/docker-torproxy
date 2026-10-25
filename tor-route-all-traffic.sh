@@ -29,7 +29,7 @@ _non_tor="192.168.1.0/24 192.168.0.0/24"
 _tor_container="$(docker ps | awk '/torproxy/ {print $NF; quit}')"
 if [[ "$_tor_container" == "" ]]; then
     echo 'ERROR: you must start a tor proxy container first, IE:'
-    echo '    docker run -d --net host --restart always dperson/torproxy'
+    echo '    docker run -d --net host --restart always rloomans/torproxy'
     exit 1
 fi
 

@@ -1,8 +1,10 @@
-[![logo](https://raw.githubusercontent.com/dperson/torproxy/master/logo.png)](https://torproject.org/)
+[![logo](https://raw.githubusercontent.com/rloomans/docker-torproxy/main/logo.png)](https://torproject.org/)
 
 # Tor and Privoxy
 
 Tor and Privoxy (web proxy configured to route through tor) docker container
+
+Forked from [dperson/torproxy](https://github.com/dperson/torproxy)
 
 # What is Tor?
 
@@ -23,12 +25,12 @@ and removing ads and other obnoxious Internet junk.
 **NOTE 1**: this image is setup by default to be a relay only (not an exit node)
 
 **NOTE 2**: this image now supports relaying all traffic through the container,
-see: [tor-route-all-traffic.sh](https://github.com/dperson/torproxy/blob/master/tor-route-all-traffic.sh).
+see: [tor-route-all-traffic.sh](https://github.com/rloomans/torproxy/blob/main/tor-route-all-traffic.sh).
 For it to work, you must set `--net=host` when launching the container.
 
 ## Exposing the port
 
-    sudo docker run -it -p 8118:8118 -p 9050:9050 -d dperson/torproxy
+    sudo docker run -it -p 8118:8118 -p 9050:9050 -d rloomans/torproxy
 
 **NOTE**: it will take a while for tor to bootstrap...
 
@@ -38,7 +40,7 @@ tor via the socks protocol directly at `http://hostname:9050`.
 
 ## Complex configuration
 
-    sudo docker run -it --rm dperson/torproxy -h
+    sudo docker run -it --rm rloomans/torproxy -h
     Usage: torproxy.sh [-opt] [command]
     Options (fields in '[]' are optional, '<>' are required):
         -h          This help
@@ -59,20 +61,20 @@ tor via the socks protocol directly at `http://hostname:9050`.
 
 ENVIRONMENT VARIABLES
 
- * `TORUSER` - If set use named user instead of 'tor' (for example root)
- * `BW` - As above, set a tor relay bandwidth limit in KB, IE `50`
- * `EXITNODE` - As above, allow tor traffic to access the internet from your IP
- * `LOCATION` - As above, configure the country to use for exit node selection
- * `PASSWORD` - As above, configure HashedControlPassword for control port
- * `SERVICE - As above, configure hidden service, IE '80;hostname:80'
- * `TZ` - Configure the zoneinfo timezone, IE `EST5EDT`
- * `USERID` - Set the UID for the app user
- * `GROUPID` - Set the GID for the app user
+* `TORUSER` - If set use named user instead of 'tor' (for example root)
+* `BW` - As above, set a tor relay bandwidth limit in KB, IE `50`
+* `EXITNODE` - As above, allow tor traffic to access the internet from your IP
+* `LOCATION` - As above, configure the country to use for exit node selection
+* `PASSWORD` - As above, configure HashedControlPassword for control port
+* `SERVICE - As above, configure hidden service, IE '80;hostname:80'
+* `TZ` - Configure the zoneinfo timezone, IE `EST5EDT`
+* `USERID` - Set the UID for the app user
+* `GROUPID` - Set the GID for the app user
 
 Other environment variables beginning with `TOR_` will edit the configuration
 file accordingly:
 
- * `TOR_NewCircuitPeriod=400` will translate to `NewCircuitPeriod 400`
+* `TOR_NewCircuitPeriod=400` will translate to `NewCircuitPeriod 400`
 
 ## Examples
 
@@ -82,24 +84,24 @@ Any of the commands can be run at creation with `docker run` or later with
 ### Setting the Timezone
 
     sudo docker run -it -p 8118:8118 -p 9050:9050 -e TZ=EST5EDT \
-                -d dperson/torproxy
+                -d rloomans/torproxy
 
 ### Start torproxy setting the allowed bandwidth:
 
-    sudo docker run -it -p 8118:8118 -p 9050:9050 -d dperson/torproxy -b 100
+    sudo docker run -it -p 8118:8118 -p 9050:9050 -d rloomans/torproxy -b 100
 
 OR
 
-    sudo docker run -it -p 8118:8118 -p 9050:9050 -e BW=100 -d dperson/torproxy
+    sudo docker run -it -p 8118:8118 -p 9050:9050 -e BW=100 -d rloomans/torproxy
 
 ### Start torproxy configuring it to be an exit node:
 
-    sudo docker run -it -p 8118:8118 -p 9050:9050 -d dperson/torproxy -e
+    sudo docker run -it -p 8118:8118 -p 9050:9050 -d rloomans/torproxy -e
 
 OR
 
     sudo docker run -it -p 8118:8118 -p 9050:9050 -e EXITNODE=1 \
-                -d dperson/torproxy
+                -d rloomans/torproxy
 
 ## Test the proxy:
 
@@ -115,7 +117,7 @@ to copy it from a running container:
 Then mount it to a new container like:
 
     sudo docker run -it -p 8118:8118 -p 9050:9050 \
-                -v /some/torrc:/etc/tor/torrc:ro -d dperson/torproxy
+                -v /some/torrc:/etc/tor/torrc:ro -d rloomans/torproxy
 
 # User Feedback
 
@@ -127,9 +129,9 @@ If you are affected by this issue (a small percentage of users are) please try
 setting the TORUSER environment variable to root, IE:
 
     sudo docker run -it -p 8118:8118 -p 9050:9050 -e TORUSER=root -d \
-                dperson/torproxy
+                rloomans/torproxy
 
 ### Reporting
 
 If you have any problems with or questions about this image, please contact me
-through a [GitHub issue](https://github.com/dperson/torproxy/issues).
+through a [GitHub issue](https://github.com/rloomans/torproxy/issues).

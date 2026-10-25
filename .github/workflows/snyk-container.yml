@@ -1,0 +1,84 @@
+name: Snyk Container
+
+# Weekly scan of the published image to catch vulnerabilities disclosed after it
+# was built. Scans of newly built images run in docker-image-publish.yml.
+# Requires a SNYK_TOKEN repository secret, see https://github.com/snyk/actions#getting-your-snyk-token
+on:
+  schedule:
+    - cron: '22 7 * * 3'
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  IMAGE: ghcr.io/rloomans/torproxy:latest
+
+jobs:
+  snyk:
+    name: Scan published image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # for actions/checkout to fetch the Dockerfile
+      packages: read # to pull the image from GHCR
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    steps:
+      - name: Check for Snyk token
+        id: snyk-token
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: echo "available=$([ -n "$SNYK_TOKEN" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.snyk-token.outputs.available == 'true'
+        with:
+          persist-credentials: false
+
+      - name: Log in to the Container registry
+        if: steps.snyk-token.outputs.available == 'true'
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull the published image
+        if: steps.snyk-token.outputs.available == 'true'
+        run: docker pull "$IMAGE"
+
+      - name: Run Snyk to check Docker image for vulnerabilities
+        if: steps.snyk-token.outputs.available == 'true'
+        # Report to GitHub Code Scanning rather than failing the run
+        continue-on-error: true
+        uses: snyk/actions/docker@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: ${{ env.IMAGE }}
+          args: --file=Dockerfile --sarif-file-output=snyk.sarif
+
+      - name: Remove null security severities from SARIF
+        if: steps.snyk-token.outputs.available == 'true' && hashFiles('snyk.sarif') != ''
+        run: |
+          cp snyk.sarif snyk.sarif.raw
+          jq 'walk(if type == "object" and (.properties | type) == "object" then .properties |= with_entries(select(.key != "security-severity" or (.value != null and .value != "null"))) else . end)' snyk.sarif > snyk.sarif.tmp
+          mv snyk.sarif.tmp snyk.sarif
+
+      - name: Upload result to GitHub Code Scanning
+        id: upload-snyk-sarif
+        if: steps.snyk-token.outputs.available == 'true' && hashFiles('snyk.sarif') != ''
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: snyk.sarif
+          category: snyk-container-published
+
+      - name: Upload SARIF diagnostic artifacts on upload failure
+        if: failure() && steps.upload-snyk-sarif.outcome == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: scheduled-${{ github.job }}-snyk-sarif-diagnostic-attempt-${{ github.run_attempt }}
+          path: |
+            snyk.sarif.raw
+            snyk.sarif
+          if-no-files-found: error
+          retention-days: 1

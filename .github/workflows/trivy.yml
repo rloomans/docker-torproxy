@@ -1,0 +1,44 @@
+name: trivy
+
+# Weekly scan of the published image to catch vulnerabilities disclosed after it
+# was built. Scans of newly built images run in docker-image-publish.yml.
+on:
+  schedule:
+    - cron: '36 21 * * 0'
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  IMAGE: ghcr.io/rloomans/torproxy:latest
+
+jobs:
+  scan:
+    name: Scan published image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read # to pull the image from GHCR
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-published
